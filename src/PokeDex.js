@@ -3,12 +3,16 @@ import { useState, useEffect } from "react";
 import ReactLoading from "react-loading";
 import axios from "axios";
 import Modal from "react-modal";
+import { filter, sortBy } from "lodash";
+
 
 function PokeDex() {
   const [pokemons, setPokemons] = useState([]);
   const [pokemonDetail, setPokemonDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [color, setColor] = useState("white");
+  const [q, setQ] = useState('');
+  const [filterresults, setFilterresults] = useState([]);
 
   useEffect(() => {
     const getpokedox = () => {
@@ -35,6 +39,30 @@ function PokeDex() {
     },
     overlay: { backgroundColor: "grey" },
   };
+
+
+  const onSearch = (search) => {
+    setIsLoading(true)
+    console.log('searchterm-----', search, pokemons)
+    let sortData = [];
+    setFilterresults([]);
+    if (search !== '' && search !== undefined && search !== null) {
+      const searchdata = filter(
+        pokemons,
+        (o) => o.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
+      );
+      setFilterresults(searchdata);
+      sortData = sortBy(filterresults, (o) => o.name.startsWith(search));
+      console.log('searchviatitle-----', sortData)
+      setIsLoading(false)
+    }
+    else {
+      setFilterresults(pokemons);
+      sortData = sortBy(filterresults, (o) => o.name.startsWith(search));
+      setIsLoading(false)
+    }
+  }
+
 
   if (!isLoading && pokemons.length === 0) {
     return (
@@ -88,18 +116,48 @@ function PokeDex() {
         ) : (
           <>
             <h1>Welcome to pokedex !</h1>
+            <div className="wrapper">
+              <div className="search-wrapper">
+                <label htmlFor="search-form">
+                  <input
+                    type="search"
+                    name="search-form"
+                    id="search-form"
+                    className="search-input"
+                    placeholder="Search for..."
+                    value={q}
+                    onChange={(e) => { setQ(e.target.value); onSearch(e.target.value) }}
+                  />
+                </label>
+              </div>
+            </div>
             <b>Implement Pokedex list here</b>
             <ul>
-              {pokemons.map((pokemon, index) => (
-                <li
-                  key={index}
-                  onMouseEnter={() => setColor("yellow")}
-                  onMouseLeave={() => setColor("white")}
-                  style={{ color: color }}
-                >
-                  <label>{pokemon.name}</label>
-                </li>
-              ))}
+              {filterresults.length > 0 ?
+                pokemons.map((pokemon, index) => (
+                  <li
+                    key={index}
+                    onMouseEnter={() => setColor("yellow")}
+                    onMouseLeave={() => setColor("white")}
+                    style={{ color: color }}
+                    onClick={() => setPokemonDetail(true)}
+                  >
+                    <label>{pokemon.name}</label>
+                  </li>
+                ))
+                :
+                pokemons.map((pokemon, index) => (
+                  <li
+                    key={index}
+                    onMouseEnter={() => setColor("yellow")}
+                    onMouseLeave={() => setColor("white")}
+                    style={{ color: color }}
+                    onClick={() => setPokemonDetail(true)}
+                  >
+                    <label>{pokemon.name}</label>
+                  </li>
+                ))
+              }
             </ul>
             <nav aria-label="Page navigation example">
               <ul className="pagination">
