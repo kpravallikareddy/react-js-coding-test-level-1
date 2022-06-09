@@ -3,19 +3,14 @@ import { useState, useEffect } from "react";
 import ReactLoading from "react-loading";
 import axios from "axios";
 import Modal from "react-modal";
-import { filter, sortBy } from "lodash";
-
 
 function PokeDex() {
   const [pokemons, setPokemons] = useState([]);
   const [pokemonDetail, setPokemonDetail] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [color, setColor] = useState("white");
-  const [q, setQ] = useState('');
-  const [filterresults, setFilterresults] = useState([]);
 
   useEffect(() => {
-    const getpokedox = () => {
+    const getpokess = () => {
       setIsLoading(true);
       setTimeout(async () => {
         const { data } = await axios.get("https://pokeapi.co/api/v2/pokemon");
@@ -23,7 +18,7 @@ function PokeDex() {
         setIsLoading(false);
       }, 3000);
     };
-    getpokedox();
+    getpokess();
   }, []);
 
   const customStyles = {
@@ -40,29 +35,10 @@ function PokeDex() {
     overlay: { backgroundColor: "grey" },
   };
 
-
-  const onSearch = (search) => {
-    setIsLoading(true)
-    console.log('searchterm-----', search, pokemons)
-    let sortData = [];
-    setFilterresults([]);
-    if (search !== '' && search !== undefined && search !== null) {
-      const searchdata = filter(
-        pokemons,
-        (o) => o.name.toLowerCase().indexOf(search.toLowerCase()) !== -1
-      );
-      setFilterresults(searchdata);
-      sortData = sortBy(filterresults, (o) => o.name.startsWith(search));
-      console.log('searchviatitle-----', sortData)
-      setIsLoading(false)
-    }
-    else {
-      setFilterresults(pokemons);
-      sortData = sortBy(filterresults, (o) => o.name.startsWith(search));
-      setIsLoading(false)
-    }
-  }
-
+  const handlemodal = async (poke) => {
+    const { data } = await axios.get(poke.url);
+    setPokemonDetail(data);
+  };
 
   if (!isLoading && pokemons.length === 0) {
     return (
@@ -104,90 +80,25 @@ function PokeDex() {
             <div className="App">
               <header className="App-header">
                 <b>Implement loader here</b>
-                <ReactLoading
-                  type={"balls"}
-                  color={"#fff"}
-                  height={"20%"}
-                  width={"20%"}
-                />
+                {isLoading ? (
+                  <ReactLoading type={"balls"} width={"20%"} height={"20%"} />
+                ) : null}
               </header>
             </div>
           </>
         ) : (
           <>
             <h1>Welcome to pokedex !</h1>
-            <div className="wrapper">
-              <div className="search-wrapper">
-                <label htmlFor="search-form">
-                  <input
-                    type="search"
-                    name="search-form"
-                    id="search-form"
-                    className="search-input"
-                    placeholder="Search for..."
-                    value={q}
-                    onChange={(e) => { setQ(e.target.value); onSearch(e.target.value) }}
-                  />
-                </label>
-              </div>
-            </div>
             <b>Implement Pokedex list here</b>
             <ul>
-              {filterresults.length > 0 ?
-                pokemons.map((pokemon, index) => (
-                  <li
-                    key={index}
-                    onMouseEnter={() => setColor("yellow")}
-                    onMouseLeave={() => setColor("white")}
-                    style={{ color: color }}
-                    onClick={() => setPokemonDetail(true)}
-                  >
-                    <label>{pokemon.name}</label>
-                  </li>
-                ))
-                :
-                pokemons.map((pokemon, index) => (
-                  <li
-                    key={index}
-                    onMouseEnter={() => setColor("yellow")}
-                    onMouseLeave={() => setColor("white")}
-                    style={{ color: color }}
-                    onClick={() => setPokemonDetail(true)}
-                  >
-                    <label>{pokemon.name}</label>
-                  </li>
-                ))
-              }
+              {pokemons.map((pokemon, index) => (
+                <li key={index}>
+                  <button onClick={() => handlemodal(pokemon)}>
+                    {pokemon.name}
+                  </button>
+                </li>
+              ))}
             </ul>
-            <nav aria-label="Page navigation example">
-              <ul className="pagination">
-                <li className="page-item">
-                  <a className="page-link" href="#/">
-                    Previous
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#/">
-                    1
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#/">
-                    2
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#/">
-                    3
-                  </a>
-                </li>
-                <li className="page-item">
-                  <a className="page-link" href="#/">
-                    Next
-                  </a>
-                </li>
-              </ul>
-            </nav>
           </>
         )}
       </header>
@@ -205,8 +116,40 @@ function PokeDex() {
             <ul>
               <li>show the sprites front_default as the pokemon image</li>
               <li>
+                <img
+                  src={pokemonDetail.sprites.front_default}
+                  height="120px"
+                  width="120px"
+                />
+              </li>
+              <li>
                 Show the stats details - only stat.name and base_stat is
                 required in tabular format
+              </li>
+              <li>
+                <table
+                  className="table-responsive"
+                  style={{ border: "1px solid white" }}
+                >
+                  <thead>
+                    <tr>
+                      <th style={{ border: "1px solid white" }}>Stat.Name</th>
+                      <th style={{ border: "1px solid white" }}>Base_Stat</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pokemonDetail.stats.map((stat, i) => (
+                      <tr key={i}>
+                        <td style={{ border: "1px solid white" }}>
+                          {stat.stat.name}
+                        </td>
+                        <td style={{ border: "1px solid white" }}>
+                          {stat.base_stat}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </li>
               <li>Create a bar chart based on the stats above</li>
               <li>
